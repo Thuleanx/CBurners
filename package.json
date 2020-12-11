@@ -1,0 +1,33 @@
+{
+  "name": "cburners",
+  "version": "1.0.0",
+  "description": "codeburners api",
+  "main": "app.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "mocha --reporter nyan",
+    "prepublish": "mocha --reporter nyan"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Thuleanx/CBurners.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Thuleanx/CBurners/issues"
+  },
+  "homepage": "https://github.com/Thuleanx/CBurners#readme",
+  "dependencies": {
+    "axios": "^0.21.0",
+    "dotenv": "^8.2.0",
+    "next": "^10.0.3",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1"
+  },
+  "devDependencies": {
+    "mocha": "^8.2.1"
+  }
+}
