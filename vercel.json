@@ -1,6 +1,6 @@
 {
-	"name": "cbuners",
 	"env": {
-		"MONGODB_URI": "@mongodb-uri"
+		"MONGODB_URI": "@mongodb-uri-updated",
+		"SECRET": "@secret"
 	}
 }

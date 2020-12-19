@@ -41,7 +41,10 @@ function match(entry1, entry2) {
 describe('Mongo DB', function() {
 	before(function(done) {
 		try {
+			console.log(process.env.MONGODB_URI);
+			console.log(process.env.SECRET);
 			client.configure();
+
 			done();
 		} catch (err) {
 			done(err);
