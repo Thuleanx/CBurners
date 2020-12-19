@@ -1,6 +1,5 @@
 var assert = require('assert');
-const { type } = require('os');
-var codeforces = require('../dependencies/codeforces.js');
+var codeforces = require('../util/codeforces.js');
 
 describe('Codeforces Interactions', function() {
 	describe('User specific commands', function() {

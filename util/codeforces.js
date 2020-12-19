@@ -20,8 +20,8 @@ module.exports = {
 		else						return res.data.comment;
 	},
 	getUserInfoMultiple: getUserInfoMultiple,
-	getUserInfo: (handle) => {
-		var res = getUserInfoMultiple([handle]);
+	getUserInfo: async (handle) => {
+		var res = await getUserInfoMultiple([handle]);
 		if (Array.isArray(res))
 			return res[0];
 		else return res;
