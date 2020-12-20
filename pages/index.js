@@ -1,5 +1,5 @@
 function HomePage() {
-	return <div>Welcome to Next.js!</div>;
+	return <img src="/img/defaultPFP.png"/>;
 }
 
 export default HomePage

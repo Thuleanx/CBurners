@@ -5,8 +5,15 @@ export default async function handler(req, res) {
 		if (req.query.username) {
 			manager.getUserInfo(req.query.username).then(
 				(userInfo) => {
-					res.status(200).json(userInfo);
-					resolve();
+					if (userInfo === null) {
+						res.status(404).json({
+							comment: `User ${req.query.username} does not exist.`
+						});
+						resolve();
+					} else {
+						res.status(200).json(userInfo);
+						resolve();
+					}
 				}, err => {
 					res.status(500).json({
 						comment: err
