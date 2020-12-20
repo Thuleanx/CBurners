@@ -319,6 +319,11 @@ module.exports = {
 			if (! (await userExist(username)))
 				throw `User with username ${username} not found`;
 
+			var league = await getLeagueInfo(league_name);
+			for (var i = 0; i < league.members.length; i++) 
+				if (league.members[i].username == username)
+					throw `User ${username} already joined this league`;
+
 			var member = {
 				username: username,
 				team: "",
