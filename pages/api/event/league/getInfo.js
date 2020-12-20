@@ -6,8 +6,15 @@ export default async function handler(req, res) {
 		const {league_name} = req.query;
 		if (league_name) {
 			manager.getLeagueInfo(league_name).then((league) => {
-				res.status(200).json(league);
-				resolve();
+				if (league==null) {
+					res.status(404).json({
+						comment: `League ${league_name} not found.`
+					});
+					resolve();
+				} else {
+					res.status(200).json(league);
+					resolve();
+				}
 			}, err => {
 				res.status(500).json({
 					comment: err

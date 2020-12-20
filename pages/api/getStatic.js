@@ -24,7 +24,6 @@ export default function handler(req, res) {
 		if (fs.existsSync(dir)) {
 			var imgStream = fs.createReadStream(dir);
 			var type = mime[path.extname(dir).slice(1)] || 'text/plain';
-			console.log(dir);
 			res.writeHead(200, {
 				'Content-Type': type
 			});
