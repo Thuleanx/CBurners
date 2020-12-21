@@ -247,6 +247,8 @@ module.exports = {
 			start_time: 0,
 			end_time: 0
 		};
+		if (leagueExist(league_name))
+			throw `A league with the name ${league_name} already exist. Please try another name.`;
 		// doc.points = teams.reduce(function (map, element) {
 		// 	map[element] = 0;
 		// 	return map;	
