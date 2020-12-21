@@ -235,7 +235,7 @@ async function getLeagueInfo(league_name) {
 }
 
 async function leagueExist(league_name) {
-	return Boolean(await  getLeagueInfo(league_name));
+	return Boolean(await getLeagueInfo(league_name));
 }
 
 module.exports = {
@@ -247,7 +247,7 @@ module.exports = {
 			start_time: 0,
 			end_time: 0
 		};
-		if (leagueExist(league_name))
+		if (await leagueExist(league_name))
 			throw `A league with the name ${league_name} already exist. Please try another name.`;
 		// doc.points = teams.reduce(function (map, element) {
 		// 	map[element] = 0;

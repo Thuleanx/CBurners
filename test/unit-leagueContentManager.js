@@ -2,12 +2,12 @@ var assert = require('assert');
 const manager = require('../util/data/leagueContentManager.js');
 require('dotenv').config();
 
-const league_name = "metamorph";
+const league_name = "js9012js90120937sj";
 const teams = ["whoosh", "temoc", "pagestans"];
-const username = "peterr";
+const username = "#peterr";
 const handle = "peterr";
 
-const contestant_usernames = ["thedarbear", "m1sch3f", "yfsn6", "wflms20110333"];
+const contestant_usernames = ["#thedarbear", "#m1sch3f", "#yfsn6", "#wflms20110333"];
 const contestant_handles = ["theDarBear", "m1sch3f", "yfsn6", "wflms20110333"];
 
 describe('League Content Manager', function () {
