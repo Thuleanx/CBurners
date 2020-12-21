@@ -16,16 +16,23 @@ export default async function handler(req, res) {
 			resolve();
 		} else {
 			manager.getLeagueInfo(league_name).then((league) => {
-				var usernameList = usernames.split(";");
+				if (league == null) {
+					res.status(404).json({
+						comment: `League ${league_name} cannot be found.`
+					});
+					resolve();
+				} else {
+					var usernameList = usernames.split(";");
 
-				var results = [];
-				for (var i = 0; i < league.members.length; i++) {
-					if (usernameList.includes(league.members[i].username)) {
-						results.push(league.members[i]);
+					var results = [];
+					for (var i = 0; i < league.members.length; i++) {
+						if (usernameList.includes(league.members[i].username)) {
+							results.push(league.members[i]);
+						}
 					}
-				}
 
-				res.status(200).json(results);
+					res.status(200).json(results);
+				}
 			}, err => {
 				res.status(500).json({
 					comment: err

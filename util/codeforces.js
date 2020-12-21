@@ -3,21 +3,30 @@ const axios = require('axios');
 const codeforcesPath = 'https://codeforces.com/api';
 
 async function getUserInfoMultiple(handles) {
-	var requestStr = `/user.info?handles=`;
-	handles.forEach(handle => {
-		requestStr += handle + ';';
-	});
-	var res = await axios.get(codeforcesPath + requestStr);
-	if (res.data.status == "OK") {
-		return res.data.result;
-	} else return res.data.comment;
+
+	try {
+		var requestStr = `/user.info?handles=`;
+		handles.forEach(handle => {
+			requestStr += handle + ';';
+		});
+		var res = await axios.get(codeforcesPath + requestStr, {timeout:10000});
+		if (res.data.status == "OK") {
+			return res.data.result;
+		} else return res.data.comment;
+	} catch (err) {
+		return err;
+	}
 }
 
 module.exports = {
 	getUserStatus: async (handle) => {
-		var res = await axios.get(codeforcesPath + `/user.status?handle=${handle}`);
-		if (res.data.status == "OK") return res.data.result;
-		else						return res.data.comment;
+		try {
+			var res = await axios.get(codeforcesPath + `/user.status?handle=${handle}`, {timeout:10000});
+			if (res.data.status == "OK") return res.data.result;
+			else						return res.data.comment;
+		} catch (err) {
+			return err;
+		}
 	},
 	getUserInfoMultiple: getUserInfoMultiple,
 	getUserInfo: async (handle) => {

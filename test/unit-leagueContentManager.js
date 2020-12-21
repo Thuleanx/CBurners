@@ -131,13 +131,24 @@ describe('League Content Manager', function () {
 			}, done);
 		});
 
+		it (`Register the rest of the users`, function (done) {
+			Promise.all(contestant_handles.map((username, i) => {
+				return manager.registerUser(contestant_usernames[i]);
+			})).then(()=> {done();}, done);
+		});
+
+		it (`Link the rest of the user's codeforces`, function (done) {
+			contestant_usernames.reduce((promise, username, i) => {
+				return promise.then(() => new Promise(r => {setTimeout(r, 300);})).then(() => manager.linkCodeforces(contestant_usernames[i], contestant_handles[i]));
+			}, Promise.resolve()).then(()=>{ done(); }, done);
+		}).timeout(30000);
+
 		it (`Register the rest of the users into the league ${league_name}`, function (done) {
-			const registerAndLinkUser = async i => {
-				await manager.registerUser(contestant_usernames[i]);
-				await manager.linkCodeforces(contestant_usernames[i], contestant_handles[i]);
+			const linkUser = async i => {
 				return manager.registerUserForLeague(league_name, contestant_usernames[i]);
 			};
-			Promise.all(contestant_usernames.map((username, i) => registerAndLinkUser(i))).then(() =>{
+
+			Promise.all(contestant_usernames.map((username, i) => linkUser(i))).then(() =>{
 				done();
 			}, done);
 		});
@@ -167,7 +178,7 @@ describe('League Content Manager', function () {
 			manager.endLeague(league_name).then((res) => {
 				done();
 			}, done);
-		}).timeout(5000);
+		}).timeout(30000);
 
 		it (`Check if league has ended`, function (done) {
 			manager.getLeagueInfo(league_name).then((league) => {

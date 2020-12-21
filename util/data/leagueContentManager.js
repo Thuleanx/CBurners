@@ -37,10 +37,49 @@ const userCollectionName = 'users';
 		-+ badges[]
 */
 
+
+function ease(t) {
+	return t<.5 ? 4*t*t*t : (t-1)*(2*t-2)*(2*t-2)+1;
+}
 /*
 */
 function computePoints(problem_rating, user_rating, live_contest, streak_cnt, num_sub) {
-	return 1;
+	var m = (problem_rating - user_rating) / 400;
+	var success_probability = 1/(1+Math.exp(10, m));
+
+	var lo = 100, hi = 200;
+
+	var increasedMultiplier = 0;
+	var moreMultiplier = 1;
+
+	if (live_contest) {
+		moreMultiplier *= 2;
+	}
+
+	if (num_sub == 1) {
+		moreMultiplier *= 2;
+	}  else if (num_sub >= 10) {
+		moreMultiplier *= 1.5;
+	}
+
+	if (streak_cnt == 1) {}
+	else if (streak_cnt == 2) 
+		increasedMultiplier += .1;
+	else if (streak_cnt == 3) 
+		increasedMultiplier += .15;
+	else if (streak_cnt == 4) 
+		increasedMultiplier += .2;
+	else if (streak_cnt == 5) 
+		increasedMultiplier += .3;
+	else if (streak_cnt == 6) 
+		increasedMultiplier += .4;
+	else if (streak_cnt == 7)
+		increasedMultiplier += .6;
+	else if (streak_cnt >= 7) {
+		increasedMultiplier += .6 + (Math.log((streak_cnt - 7))/Math.log(2))/100;
+	}
+
+	return ((hi-lo)*ease(success_probability) + lo)*(1+increasedMultiplier)*moreMultiplier;
 }
 
 async function updateUserPerformance(league_name, username, cf_status = null) {
@@ -60,12 +99,13 @@ async function updateUserPerformance(league_name, username, cf_status = null) {
 	if (league.end_time != 0 && league.end_time < updateTime)
 		throw `Attempt to update user after the end of league ${league_name}`;
 
-	if (!cf_status) cf_status = await codeforces.getUserStatus(user);
+	if (!cf_status) cf_status = await codeforces.getUserStatus(user.cf_handle);
 
 	var submission_cnt = {};
 	let finished = new Set();
 	var streak_cnt = 0;
 	var points_accumulated = 0;
+	var problems_solved = 0;
 
 	// O(number of submissions)
 	for (var i = cf_status.length - 1; i >= 0; i--) {
@@ -73,7 +113,7 @@ async function updateUserPerformance(league_name, username, cf_status = null) {
 		// we also ignore problems without difficulty rating for now
 		if (cf_status[i].verdict == "COMPILATION_ERROR" || cf_status[i].passedTestCount == 0 || 
 			!("rating" in cf_status[i].problem))
-			continue;
+				continue;
 
 		var problem_id = cf_status[i].problem.contestId + cf_status[i].problem.index;
 
@@ -89,8 +129,11 @@ async function updateUserPerformance(league_name, username, cf_status = null) {
 		if (cf_status[i].verdict == "OK") {
 			streak_cnt++;
 
-			points_accumulated += computePoints(cf_status[i].problem.rating, user.internal_cf_rating, 
-				cf_status[i].author.participantType == "CONTESTANT", streak_cnt, num_sub);
+			if (league.start_time <= cf_status[i].creationTimeSeconds*1000) {
+				points_accumulated += computePoints(cf_status[i].problem.rating, Math.max(user.rating, 1400), 
+					cf_status[i].author.participantType == "CONTESTANT", streak_cnt, num_sub);
+				problems_solved++;
+			}
 
 			finished.add(problem_id);
 		} else { streak_cnt = 0; }
@@ -104,9 +147,10 @@ async function updateUserPerformance(league_name, username, cf_status = null) {
 		"members.username": username
 	}, {
 		$set: {
-			"members.$.points_accumulated": points_accumulated, 
+			"members.$.points": points_accumulated, 
 			"members.$.streak_cnt": streak_cnt,
-			"members.$.last_update_time": updateTime
+			"members.$.last_update_time": updateTime,
+			"members.$.problems_solved": problems_solved
 		}
 	});
 }
@@ -204,11 +248,39 @@ async function endLeague(league_name) {
 
 	const database = await client.getDatabase(databaseName);
 	const collection = client.getCollection(database, leagueCollectionName);
+	const userCollection = client.getCollection(database, userCollectionName);
 
 	for (var i = 0; i < league.members.length; i++) {
 		await new Promise(r => setTimeout(r, 400)); // prevent too many requests per second
-		updateUserPerformance(league_name, league.members[i].username);
+		await updateUserPerformance(league_name, league.members[i].username);
 	}
+	league = await getLeagueInfo(league_name);
+
+	const getGainRate = async (index) => {
+		league.members[index].prev_gain_rate = (await getUserInfo(league.members[index].username)).gain_rate;
+		return true;
+	};
+
+	await Promise.all(league.members.map((member, i) => {
+		return getGainRate(i); 
+	}));
+
+	await Promise.all(league.members.map((member, index) => {
+		var leagueDurationDays = (league.end_time - league.start_time) / (1000*60*60*24);
+		var gain_rate_cur = member.points / leagueDurationDays;
+		return client.updateEntry(userCollection, {username: member.username}, {
+			$inc: {
+				points_accumulated: member.points,
+				solved: member.problems_solved
+			},
+			$push: {
+				league_participation: league.league_name	
+			},
+			$set: {
+				gain_rate: (.3 * member.prev_gain_rate + .7 * gain_rate_cur) 
+			}
+		});
+	}));
 
 	return await client.updateEntry(collection, { league_name: league_name }, {
 		$set: {
@@ -318,8 +390,12 @@ module.exports = {
 			const database = await client.getDatabase(databaseName);
 			const collection = client.getCollection(database, leagueCollectionName);
 
-			if (! (await userExist(username)))
+			var user =await getUserInfo(username);
+			if (user == null)
 				throw `User with username ${username} not found`;
+			else if (!("cf_handle" in user) || user.cf_handle == '')
+				throw `User ${username} does not have a cf account linked.`;
+				
 
 			var league = await getLeagueInfo(league_name);
 			for (var i = 0; i < league.members.length; i++) 
