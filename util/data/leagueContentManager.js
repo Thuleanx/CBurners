@@ -57,7 +57,7 @@ function computePoints(problem_rating, user_rating, live_contest, streak_cnt, nu
 	}
 
 	if (num_sub == 1) {
-		moreMultiplier *= 2;
+		moreMultiplier *= 1.5;
 	}  else if (num_sub >= 10) {
 		moreMultiplier *= 1.5;
 	}
@@ -168,6 +168,8 @@ async function assignTeam(league_name, username, team_name) {
 	if (Boolean(league)) {
 		if (league.teams.indexOf(team_name) === -1)
 			throw `Team ${team_name} does not exist in the league ${league_name}`;
+		if (league.end_time && league.end_time < Date.now().valueOf())
+			throw `Cannot join ${league_name} since it has already ended.`;
 
 		const database = await client.getDatabase(databaseName);
 		const collection = client.getCollection(database, leagueCollectionName);
@@ -331,6 +333,30 @@ module.exports = {
 
 		return await client.insertEntry(collection, doc);
 	},
+	getWeakestTeam: async (league_name) => {
+		var league = await getLeagueInfo(league_name);
+		if (!Boolean(league)) throw `Cannot find league ${league_name}`;
+
+
+		var teamPointMapping = {};
+		for (var i = 0; i < league.teams.length; i++)
+			teamPointMapping[league.teams[i]] = 0;
+
+		for (var i = 0; i < league.members.length; i++) {
+			league.members[i].gain_rate = (await getUserInfo(league.members[i].username)).gain_rate;
+			if (Boolean(league.members[i].team) && league.members[i].team.length) {
+				teamPointMapping[league.members[i].team] += league.members[i].gain_rate;
+			}
+		}
+		var worst = null;
+		Object.entries(teamPointMapping).forEach((keyValuePair, index) => {
+			var team_name = keyValuePair[0], points = keyValuePair[1];
+			if (worst == null || teamPointMapping[worst] > points)
+				worst = team_name;
+		});
+
+		return worst;
+	},
 	deleteLeague: async (league_name) => {
 		const database = await client.getDatabase(databaseName);
 		const collection = client.getCollection(database, leagueCollectionName);
@@ -378,7 +404,7 @@ module.exports = {
 						rating: cf.maxRating,
 						pfp: cf.avatar,
 						internal_cf_rating: 0,
-						gain_rate: Math.max(1400, cf.maxRating)/1000.0
+						gain_rate: Math.max(1400, cf.maxRating)
 					}
 				};
 				return await client.updateEntry(collection, {username: username}, updateInstruction);

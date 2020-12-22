@@ -174,6 +174,17 @@ describe('League Content Manager', function () {
 			}, done);
 		});
 
+		it (`Get the weakest team`, function (done) {
+			manager.getWeakestTeam(league_name).then((team) => {
+				try {
+					assert.ok(teams.includes(team), `The weakest team should be in the list of teams, but is instead ${team}`);
+					done();
+				} catch (err) {
+					done(err);
+				}
+			}, done);
+		});
+
 		it (`End the league ${league_name}`, function (done) {
 			manager.endLeague(league_name).then((res) => {
 				done();
