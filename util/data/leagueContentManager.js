@@ -45,7 +45,7 @@ function ease(t) {
 */
 function computePoints(problem_rating, user_rating, live_contest, streak_cnt, num_sub) {
 	var m = (user_rating - problem_rating) / 400.0;
-	var success_probability = 1/(1+Math.exp(10, m));
+	var failure_probability = 1/(1+Math.pow(10, m));
 
 	var lo = 100, hi = 200;
 
@@ -79,7 +79,7 @@ function computePoints(problem_rating, user_rating, live_contest, streak_cnt, nu
 		increasedMultiplier += .6 + (Math.log((streak_cnt - 7))/Math.log(2))/100;
 	}
 
-	return ((hi-lo)*ease(success_probability) + lo)*(1+increasedMultiplier)*moreMultiplier;
+	return ((hi-lo)*ease(failure_probability) + lo)*(1+increasedMultiplier)*moreMultiplier;
 }
 
 async function updateUserPerformance(league_name, username, cf_status = null) {
@@ -130,7 +130,6 @@ async function updateUserPerformance(league_name, username, cf_status = null) {
 			streak_cnt++;
 
 			if (league.start_time <= cf_status[i].creationTimeSeconds*1000) {
-				console.log(cf_status[i].problem);
 				points_accumulated += computePoints(cf_status[i].problem.rating, Math.max(user.rating, 1400), 
 					cf_status[i].author.participantType == "CONTESTANT", streak_cnt, num_sub);
 				problems_solved++;
