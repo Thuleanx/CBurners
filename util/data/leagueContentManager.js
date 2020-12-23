@@ -44,7 +44,7 @@ function ease(t) {
 /*
 */
 function computePoints(problem_rating, user_rating, live_contest, streak_cnt, num_sub) {
-	var m = (problem_rating - user_rating) / 400;
+	var m = (user_rating - problem_rating) / 400;
 	var success_probability = 1/(1+Math.exp(10, m));
 
 	var lo = 100, hi = 200;
