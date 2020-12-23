@@ -44,7 +44,7 @@ function ease(t) {
 /*
 */
 function computePoints(problem_rating, user_rating, live_contest, streak_cnt, num_sub) {
-	var m = (user_rating - problem_rating) / 400;
+	var m = (user_rating - problem_rating) / 400.0;
 	var success_probability = 1/(1+Math.exp(10, m));
 
 	var lo = 100, hi = 200;
@@ -130,6 +130,7 @@ async function updateUserPerformance(league_name, username, cf_status = null) {
 			streak_cnt++;
 
 			if (league.start_time <= cf_status[i].creationTimeSeconds*1000) {
+				console.log(cf_status[i].problem);
 				points_accumulated += computePoints(cf_status[i].problem.rating, Math.max(user.rating, 1400), 
 					cf_status[i].author.participantType == "CONTESTANT", streak_cnt, num_sub);
 				problems_solved++;
